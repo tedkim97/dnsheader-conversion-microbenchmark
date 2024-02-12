@@ -1,5 +1,7 @@
 // extern crate test;
 
+/// A logical representation of a DNS message header defined in RFC1035
+/// These values are specifically taken from RFC6895
 pub struct DnsHeader {
     pub id: u16,
     pub qr: bool,
@@ -27,6 +29,9 @@ mod dns_header_masks {
     pub const CD: u16 = 0b0000_0000_0001_0000;
 }
 
+/// Converts a logical representation of a DNS message header into its wire 
+/// format without branches.
+/// If the provided size of the array is too slow, this will cause a panic
 pub fn convert_to_wire_format_branchless(header: &DnsHeader, bytes: &mut [u8]) {
     // Serialize ID
     [bytes[0], bytes[1]] = header.id.to_be_bytes();
@@ -49,6 +54,9 @@ pub fn convert_to_wire_format_branchless(header: &DnsHeader, bytes: &mut [u8]) {
     [bytes[10], bytes[11]] = header.arcount.to_be_bytes();
 }
 
+/// Converts a logical representation of a DNS message header into its wire 
+/// format with branches.
+/// If the provided size of the array is too slow, this will cause a panic
 pub fn convert_to_wire_format_branched_1(header: &DnsHeader, bytes: &mut [u8]) {
     // Serialize ID
     [bytes[0], bytes[1]] = header.id.to_be_bytes();
@@ -85,6 +93,8 @@ pub fn convert_to_wire_format_branched_1(header: &DnsHeader, bytes: &mut [u8]) {
     [bytes[10], bytes[11]] = header.arcount.to_be_bytes();
 }
 
+/// Converts a logical representation of a DNS message header into its wire 
+/// format with branches.
 pub fn convert_to_wire_format_branched_2(header: &DnsHeader, bytes: &mut [u8]) {
     // Serialize ID
     [bytes[0], bytes[1]] = header.id.to_be_bytes();
