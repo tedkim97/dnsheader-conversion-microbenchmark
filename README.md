@@ -73,6 +73,12 @@ perf stat -r 5000 ./target/debug/random_bench branchless 1000000
 
 
 ### Generating assembly (requires `cargo-show-asm` installation - NOT `cargo-asm`)
+
+```
+bash generate_assembly.sh
+```
+
+
 `Optimized (release)`
 ```
 cargo asm --release --lib header_util::header_conversion::convert_to_wire_format_branched_1 --native
