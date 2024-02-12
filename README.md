@@ -49,20 +49,49 @@ This is a branch - and where there is a branch, there's room for a branchless op
 cargo bench
 ```
 
+To bench with the non-optimized code, and setting the opt-level in `Cargo.toml`
+```
+[profile.bench]
+opt-level = 0
+```
+
 ### Microbenchmark through a binary (to use with other frameworks)
 ```
 cargo build --release
-perf stat ./target/release/random_bench branchless 1000000
-perf stat ./target/release/random_bench branchless 1000000
-perf stat ./target/release/random_bench branchless 1000000
+perf stat -r 5000 ./target/release/random_bench branched1 1000000
+perf stat -r 5000 ./target/release/random_bench branched2 1000000
+perf stat -r 5000 ./target/release/random_bench branchless 1000000
 ```
 
-### Generating assembly (requires `cargo asm` installation)
 ```
-cargo asm header_util::header_conversion::convert_to_wire_format_branched_1
-cargo asm header_util::header_conversion::convert_to_wire_format_branched_2
-cargo asm header_util::header_conversion::convert_to_wire_format_branchless
+cargo build --debug
+perf stat -r 5000 ./target/debug/random_bench branched1 1000000
+perf stat -r 5000 ./target/debug/random_bench branched2 1000000
+perf stat -r 5000 ./target/debug/random_bench branchless 1000000
 ```
+
+
+
+### Generating assembly (requires `cargo-show-asm` installation - NOT `cargo-asm`)
+`Optimized (release)`
+```
+cargo asm --release --lib header_util::header_conversion::convert_to_wire_format_branched_1 --native
+cargo asm --release --lib header_util::header_conversion::convert_to_wire_format_branched_2 --native
+cargo asm --release --lib header_util::header_conversion::convert_to_wire_format_branchless --native
+```
+
+`Unoptimized`
+```
+cargo asm --dev --lib header_util::header_conversion::convert_to_wire_format_branched_1 --native
+cargo asm --dev --lib header_util::header_conversion::convert_to_wire_format_branched_2 --native
+cargo asm --dev --lib header_util::header_conversion::convert_to_wire_format_branchless --native
+```
+
+Generate code annotations as well w/ --rust:
+
+EX: `cargo asm --dev --lib header_util::header_conversion::convert_to_wire_format_branchless --rust --native`
+
+
 
 ### Appendinx - factoring in target CPU
 

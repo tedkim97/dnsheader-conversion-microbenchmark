@@ -14,12 +14,6 @@ fn main() {
         .parse()
         .unwrap();
 
-    println!(
-        "===Running trials with {} and {} trials===",
-        conversion_mode.unwrap(),
-        num_trials
-    );
-
     let headers = header_util::random_header::generate_random_headers(num_trials);
     let mut buffer = vec![0; 12];
     std::hint::black_box(&buffer);
@@ -27,5 +21,4 @@ fn main() {
         let header = headers.get(i).unwrap();
         convert(header, &mut buffer);
     }
-    println!("===Done===");
 }
