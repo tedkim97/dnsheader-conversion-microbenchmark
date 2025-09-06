@@ -6,6 +6,9 @@ fn main() {
         Some("branchless") => header_util::header_conversion::convert_to_wire_format_branchless,
         Some("branched1") => header_util::header_conversion::convert_to_wire_format_branched_1,
         Some("branched2") => header_util::header_conversion::convert_to_wire_format_branched_2,
+        Some("branchless_assert_opt") => header_util::header_conversion::convert_to_wire_format_branchless_assert,
+        Some("branched1_assert_opt") => header_util::header_conversion::convert_to_wire_format_branched_1_assert,
+        Some("branched2_assert_opt") => header_util::header_conversion::convert_to_wire_format_branched_2_assert,
         _ => panic!("valid conversion function required"),
     };
     let num_trials: usize = std::env::args()

@@ -97,8 +97,21 @@ Generate code annotations as well w/ --rust:
 
 EX: `cargo asm --dev --lib header_util::header_conversion::convert_to_wire_format_branchless --rust --native`
 
-
-
 ### Appendinx - factoring in target CPU
 
 Don't forget to set the flag RUSTFLAGS to target your platform cpu `RUSTFLAGS='-C target-cpu=native'`
+
+# More optimizations
+
+From this issue: https://github.com/tedkim97/dnsheader-conversion-microbenchmark/issues/1
+
+lokegustafsson pointed out that the Rust logic was generating a lot of bounds check, and that the compiler can generate much more efficient assembly by including an `assert` check on the length of the input. Here's an example of the improvement:
+
+```
+test header_conversion::tests::bench_wire_format_query_header_branched_1            ... bench:     335,377.50 ns/iter (+/- 3,233.50)
+test header_conversion::tests::bench_wire_format_query_header_branched_1_assert_opt ... bench:     210,144.68 ns/iter (+/- 2,643.16)
+test header_conversion::tests::bench_wire_format_query_header_branched_2            ... bench:     314,083.33 ns/iter (+/- 4,791.67)
+test header_conversion::tests::bench_wire_format_query_header_branched_2_assert_opt ... bench:     210,620.63 ns/iter (+/- 2,388.41)
+test header_conversion::tests::bench_wire_format_query_header_branchless            ... bench:     313,821.89 ns/iter (+/- 2,862.12)
+test header_conversion::tests::bench_wire_format_query_header_branchless_assert_opt ... bench:     210,225.00 ns/iter (+/- 6,147.03)
+```

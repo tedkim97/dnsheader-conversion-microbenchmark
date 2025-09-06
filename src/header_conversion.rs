@@ -146,14 +146,131 @@ pub fn convert_to_wire_format_branched_2(header: &DnsHeader, bytes: &mut [u8]) {
     [bytes[10], bytes[11]] = header.arcount.to_be_bytes();
 }
 
+/// convert_to_wire_format_branchless with an assert! to reduce bounds check. Duplicated
+/// code is to have inlined assembly for comparison
+pub fn convert_to_wire_format_branchless_assert(header: &DnsHeader, bytes: &mut [u8]) {
+    assert!(bytes.len() >= 12);
+    // Serialize ID
+    [bytes[0], bytes[1]] = header.id.to_be_bytes();
+    // Serialize Flags
+    let mut flags: u16 = 0;
+    flags |= dns_header_masks::QR * (header.qr as u16);
+    flags |= u16::from(header.opcode) << 11;
+    flags |= dns_header_masks::AA * (header.aa as u16);
+    flags |= dns_header_masks::TC * (header.tc as u16);
+    flags |= dns_header_masks::RD * (header.rd as u16);
+    flags |= dns_header_masks::RA * (header.ra as u16);
+    flags |= dns_header_masks::AD * (header.ad as u16);
+    flags |= dns_header_masks::CD * (header.cd as u16);
+    flags |= u16::from(header.rcode);
+    [bytes[2], bytes[3]] = flags.to_be_bytes();
+    // Serialize RR counts
+    [bytes[4], bytes[5]] = header.qdcount.to_be_bytes();
+    [bytes[6], bytes[7]] = header.ancount.to_be_bytes();
+    [bytes[8], bytes[9]] = header.nscount.to_be_bytes();
+    [bytes[10], bytes[11]] = header.arcount.to_be_bytes();
+}
+
+/// convert_to_wire_format_branched_1 with an assert! to reduce bounds check. Duplicated
+/// code is to have inlined assembly for comparison
+pub fn convert_to_wire_format_branched_1_assert(header: &DnsHeader, bytes: &mut [u8]) {
+    assert!(bytes.len() >= 12);
+    // Serialize ID
+    [bytes[0], bytes[1]] = header.id.to_be_bytes();
+    // Serialize Flags
+    let mut flags: u16 = 0;
+    if header.qr {
+        flags |= dns_header_masks::QR;
+    }
+    flags |= u16::from(header.opcode) << 11;
+    if header.aa {
+        flags |= dns_header_masks::AA;
+    }
+    if header.tc {
+        flags |= dns_header_masks::TC;
+    }
+    if header.rd {
+        flags |= dns_header_masks::RD;
+    }
+    if header.ra {
+        flags |= dns_header_masks::RA;
+    }
+    if header.ad {
+        flags |= dns_header_masks::AD;
+    }
+    if header.cd {
+        flags |= dns_header_masks::CD;
+    }
+    flags |= u16::from(header.rcode);
+    [bytes[2], bytes[3]] = flags.to_be_bytes();
+    // Serialize RR counts
+    [bytes[4], bytes[5]] = header.qdcount.to_be_bytes();
+    [bytes[6], bytes[7]] = header.ancount.to_be_bytes();
+    [bytes[8], bytes[9]] = header.nscount.to_be_bytes();
+    [bytes[10], bytes[11]] = header.arcount.to_be_bytes();
+}
+
+/// convert_to_wire_format_branched_2 with an assert! to reduce bounds check. Duplicated
+/// code is to have inlined assembly for comparison
+pub fn convert_to_wire_format_branched_2_assert(header: &DnsHeader, bytes: &mut [u8]) {
+    assert!(bytes.len() >= 12);
+    // Serialize ID
+    [bytes[0], bytes[1]] = header.id.to_be_bytes();
+    // Serialize Flags
+    let mut flags: u16 = 0;
+    flags |= u16::from(header.opcode) << 11;
+
+    flags |= if header.qr {
+        dns_header_masks::QR
+    } else {
+        0u16
+    };
+    flags |= if header.aa {
+        dns_header_masks::AA
+    } else {
+        0u16
+    };
+    flags |= if header.tc {
+        dns_header_masks::TC
+    } else {
+        0u16
+    };
+    flags |= if header.rd {
+        dns_header_masks::RD
+    } else {
+        0u16
+    };
+    flags |= if header.ra {
+        dns_header_masks::RA
+    } else {
+        0u16
+    };
+    flags |= if header.ad {
+        dns_header_masks::AD
+    } else {
+        0u16
+    };
+    flags |= if header.cd {
+        dns_header_masks::CD
+    } else {
+        0u16
+    };
+    flags |= u16::from(header.rcode);
+    [bytes[2], bytes[3]] = flags.to_be_bytes();
+    // Serialize RR counts
+    [bytes[4], bytes[5]] = header.qdcount.to_be_bytes();
+    [bytes[6], bytes[7]] = header.ancount.to_be_bytes();
+    [bytes[8], bytes[9]] = header.nscount.to_be_bytes();
+    [bytes[10], bytes[11]] = header.arcount.to_be_bytes();
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use test::Bencher;
 
-    #[test]
-    fn conversion_convert() {
-        let header = DnsHeader {
+    const DEFAULT_HEADER : DnsHeader = DnsHeader {
             id: 123,
             qr: false,
             opcode: 0,
@@ -169,13 +286,16 @@ mod tests {
             nscount: 0,
             arcount: 0,
         };
+
+    #[test]
+    fn conversion_convert() {
         let mut branchless_bytes = vec![0; 12];
         let mut branched_bytes = vec![0; 12];
         let mut branched_bytes_2 = vec![0; 12];
 
-        convert_to_wire_format_branchless(&header, &mut branchless_bytes);
-        convert_to_wire_format_branched_1(&header, &mut branched_bytes);
-        convert_to_wire_format_branched_2(&header, &mut branched_bytes_2);
+        convert_to_wire_format_branchless(&DEFAULT_HEADER, &mut branchless_bytes);
+        convert_to_wire_format_branched_1(&DEFAULT_HEADER, &mut branched_bytes);
+        convert_to_wire_format_branched_2(&DEFAULT_HEADER, &mut branched_bytes_2);
 
         assert_eq!(branchless_bytes, branched_bytes);
         assert_eq!(branched_bytes, branched_bytes_2);
@@ -183,82 +303,68 @@ mod tests {
 
     #[bench]
     fn bench_wire_format_query_header_branchless(b: &mut Bencher) {
-        let header = DnsHeader {
-            id: 123,
-            qr: false,
-            opcode: 0,
-            aa: false,
-            tc: false,
-            rd: true,
-            ra: false,
-            ad: true,
-            cd: false,
-            rcode: 0,
-            qdcount: 1,
-            ancount: 0,
-            nscount: 0,
-            arcount: 0,
-        };
         let mut buffer = vec![0; 12];
         std::hint::black_box(&buffer);
         b.iter(|| {
             for _x in 1..100000 {
-                convert_to_wire_format_branchless(&header, &mut buffer);
+                convert_to_wire_format_branchless(&DEFAULT_HEADER, &mut buffer);
             }
         });
     }
 
     #[bench]
     fn bench_wire_format_query_header_branched_1(b: &mut Bencher) {
-        let header = DnsHeader {
-            id: 123,
-            qr: false,
-            opcode: 0,
-            aa: false,
-            tc: false,
-            rd: true,
-            ra: false,
-            ad: true,
-            cd: false,
-            rcode: 0,
-            qdcount: 1,
-            ancount: 0,
-            nscount: 0,
-            arcount: 0,
-        };
         let mut buffer = vec![0; 12];
         std::hint::black_box(&buffer);
         b.iter(|| {
             for _x in 1..100000 {
-                convert_to_wire_format_branched_1(&header, &mut buffer);
+                convert_to_wire_format_branched_1(&DEFAULT_HEADER, &mut buffer);
             }
         });
     }
 
     #[bench]
     fn bench_wire_format_query_header_branched_2(b: &mut Bencher) {
-        let header = DnsHeader {
-            id: 123,
-            qr: false,
-            opcode: 0,
-            aa: false,
-            tc: false,
-            rd: true,
-            ra: false,
-            ad: true,
-            cd: false,
-            rcode: 0,
-            qdcount: 1,
-            ancount: 0,
-            nscount: 0,
-            arcount: 0,
-        };
         let mut buffer = vec![0; 12];
         std::hint::black_box(&buffer);
         b.iter(|| {
             for _x in 1..100000 {
-                convert_to_wire_format_branched_2(&header, &mut buffer);
+                convert_to_wire_format_branched_2(&DEFAULT_HEADER, &mut buffer);
+            }
+        });
+    }
+
+    #[bench]
+    fn bench_wire_format_query_header_branchless_assert_opt(b: &mut Bencher) {
+        let mut buffer = vec![0; 12];
+        std::hint::black_box(&buffer);
+        b.iter(|| {
+            for _x in 1..100000 {
+                convert_to_wire_format_branchless_assert(&DEFAULT_HEADER, &mut buffer);
+            }
+        });
+    }
+
+    #[bench]
+    fn bench_wire_format_query_header_branched_1_assert_opt(b: &mut Bencher) {
+        let mut buffer = vec![0; 12];
+        std::hint::black_box(&buffer);
+        b.iter(|| {
+            for _x in 1..100000 {
+                convert_to_wire_format_branched_1_assert(&DEFAULT_HEADER, &mut buffer);
+            }
+        });
+    }
+
+    #[bench]
+    fn bench_wire_format_query_header_branched_2_assert_opt(b: &mut Bencher) {
+        let mut buffer = vec![0; 12];
+        std::hint::black_box(&buffer);
+        b.iter(|| {
+            for _x in 1..100000 {
+                convert_to_wire_format_branched_2_assert(&DEFAULT_HEADER, &mut buffer);
             }
         });
     }
 }
+

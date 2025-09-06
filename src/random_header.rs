@@ -1,4 +1,4 @@
-use header_conversion;
+use crate::header_conversion;
 use rand::Rng;
 
 /// Generates a vector of random structs where the bits
@@ -99,6 +99,48 @@ mod tests {
             for i in 0..trials {
                 let header = headers.get(i).unwrap();
                 header_conversion::convert_to_wire_format_branched_2(header, &mut buffer);
+            }
+        });
+    }
+
+    #[bench]
+    fn bench_wire_random_header_branchless_assert_opt(b: &mut Bencher) {
+        let trials: usize = 10000;
+        let headers = generate_random_headers(trials);
+        let mut buffer = vec![0; 12];
+        std::hint::black_box(&buffer);
+        b.iter(|| {
+            for i in 0..trials {
+                let header = headers.get(i).unwrap();
+                header_conversion::convert_to_wire_format_branchless_assert(header, &mut buffer);
+            }
+        });
+    }
+
+    #[bench]
+    fn bench_wire_random_header_branched_1_assert_opt(b: &mut Bencher) {
+        let trials: usize = 10000;
+        let headers = generate_random_headers(trials);
+        let mut buffer = vec![0; 12];
+        std::hint::black_box(&buffer);
+        b.iter(|| {
+            for i in 0..trials {
+                let header = headers.get(i).unwrap();
+                header_conversion::convert_to_wire_format_branched_1_assert(header, &mut buffer);
+            }
+        });
+    }
+
+    #[bench]
+    fn bench_wire_random_header_branched_2_assert_opt(b: &mut Bencher) {
+        let trials: usize = 10000;
+        let headers = generate_random_headers(trials);
+        let mut buffer = vec![0; 12];
+        std::hint::black_box(&buffer);
+        b.iter(|| {
+            for i in 0..trials {
+                let header = headers.get(i).unwrap();
+                header_conversion::convert_to_wire_format_branched_2_assert(header, &mut buffer);
             }
         });
     }

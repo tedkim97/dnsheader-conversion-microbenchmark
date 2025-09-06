@@ -4,3 +4,6 @@ cargo asm --dev --lib header_util::header_conversion::convert_to_wire_format_bra
 cargo asm --release --lib header_util::header_conversion::convert_to_wire_format_branched_1 --native > generated_assembly/release_branched1.asm
 cargo asm --release --lib header_util::header_conversion::convert_to_wire_format_branched_2 --native > generated_assembly/release_branched2.asm
 cargo asm --release --lib header_util::header_conversion::convert_to_wire_format_branchless --native > generated_assembly/release_branchless.asm
+cargo asm --release --lib header_util::header_conversion::convert_to_wire_format_branched_1_assert --native > generated_assembly/release_branched1_with_assert.asm
+cargo asm --release --lib header_util::header_conversion::convert_to_wire_format_branched_2_assert --native > generated_assembly/release_branched2_with_assert.asm
+cargo asm --release --lib header_util::header_conversion::convert_to_wire_format_branchless_assert --native > generated_assembly/release_branchless_with_assert.asm

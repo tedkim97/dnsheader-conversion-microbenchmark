@@ -2,6 +2,7 @@
 name = "test_benchmark"
 version = "0.1.0"
 autobins = false
+edition = "2024"
 
 [lib]
 name = "header_util"
